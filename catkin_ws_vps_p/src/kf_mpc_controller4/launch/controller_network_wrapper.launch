@@ -1,0 +1,16 @@
+<launch>
+<node name="controller_network_wrapper" pkg="kf_mpc_controller4" type="controller_network_wrapper_node4" output="screen">
+      <param name="network_message_sub_topic" value="/network/message_from_other"/>                          <!-- This topic data from network communication -->
+      <param name="dt_object_position_pub_topic" value="/virtual/uav0/current_position"/>                    <!-- This topic data publish the dt object position-->
+      <param name="virtual_guide_pub_topic" value="/virtual_guide/cmd"/>
+      <param name="virtual_guide_control_pub_topic" value="/virtual_guide/type"/>
+      <param name="dt_object_position_recv_hz" value="30.0"/>
+      <param name="is_unity" value="false"/>
+      <param name="network_delay_pub_topic" value="/network_delay/recv_delay"/>
+      <param name="network_delay_pub_hz" value="30.0"/>
+      <param name="predict_window" value="8"/>                                                     <!--The window size for predicting further system state(predicted steps)-->
+      <param name="predict_time_dt" value="0.033"/>                                                  <!--The predicted time step for least square-->
+      <param name="target_position_pub_topic" value="/controller/target/position"/>
+      <param name="model_learner_control_pub_topic" value="/model_learner/control"/>
+</node>
+</launch>

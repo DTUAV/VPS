@@ -1,0 +1,9 @@
+<launch>
+<node name="state_estimator" pkg="kf_mpc_controller2" type="state_estimator_node2" output="screen">
+      <param name="dt_obj_position_sub_topic" value="/virtual/uav0/current_position"/>                     <!-- This topic data from digital twin object -->
+      <param name="est_move_state_pub_topic" value="/virtual/uav0/current_move_state"/>                    <!-- This topic data from kalman filter-->
+      <param name="kf_information_pub_topic" value="/state_estimator/information"/>
+      <param name="kf_run_hz" value="30"/>                                                                 <!-- The kalman filter running frequency -->
+      <param name="update_measure_err_k" value="45.0"/>                                                     <!-- The gain of update measured error-->
+</node>
+</launch>

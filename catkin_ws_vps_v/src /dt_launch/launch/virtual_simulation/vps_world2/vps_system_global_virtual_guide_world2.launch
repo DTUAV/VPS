@@ -1,0 +1,172 @@
+<launch>
+
+                                              <!--     simulator online     -->
+<node name="simulator_network_delay_model" pkg="network_delay_model" type="network_delay_model_node" output="screen">
+      <param name="virtual_object_position_sub_topic" value="/V_UAV_1/LocalPosition/Pose"/>
+      <param name="virtual_object_position_pub_topic" value="/virtual/uav1/current_position"/>
+      <param name="physical_object_position_sub_topic" value="/simulator/position_sensor/data"/>
+      <param name="physical_object_position_pub_topic" value="/network1/simulator/position_sensor/data"/> <!--No use-->
+      <param name="reset_object_sub_topic" value="/simulator/reset"/>
+      <param name="predict_window" value="8"/>                                                     <!--The window size for predicting further system state(predicted steps)-->
+      <param name="predict_time_dt" value="0.033"/>                                                  <!--The predicted time step for least square-->
+      <param name="target_position_pub_topic" value="/simulator/controller/target_position"/>
+      <param name="virtual2physical_delay_time_sub_topic" value="/delay_time/v2p"/>
+      <param name="physical2virtual_delay_time_sub_topic" value="/delay_time/p2v"/>
+      <param name="v2p_noise_mu" value="0.0"/>
+      <param name="v2p_noise_sigma" value="0.001"/>
+      <param name="p2v_noise_mu" value="0.0"/>
+      <param name="p2v_noise_sigma" value="0.001"/>
+      <param name="virtual_guide_type_sub_topic" value="/simulator/virtual_guide/type"/>
+      <param name="virtual_guide_type_pub_topic" value="/network/simulator/virtual_guide/type"/>
+      <param name="virtual_guide_cmd_sub_topic" value="/simulator/uav/command"/>
+      <param name="virtual_guide_cmd_pub_topic" value="/network/simulator/uav/command"/>
+      <param name="physical_uav_position_sub_topic" value="/simulator/position_sensor/data"/>
+      <param name="physical_uav_position_pub_topic" value="/network/simulator/position_sensor/data"/>
+      <param name="physical_uav_move_state_pub_topic" value="/network/physical_uav/move/state"/>
+</node>
+<node name="simulator_mpc_controller" pkg="kf_mpc_controller4" type="mpc_controller_node4" output="screen">
+      <param name="current_position_sub_topic" value="/network/simulator/position_sensor/data"/>                          <!-- This topic data from sensor measure by GPS or UWB or other located system -->
+      <param name="target_position_sub_topic" value="/simulator/controller/target_position"/>                           <!-- This tipic data from state predictor-->
+      <param name="controller_output_pub_topic" value="/simulator/mpc_controller/output"/>              <!-- This topic data to px4 controller-->
+      <param name="update_model_parameter_sub_topic" value="/model_learner/model_parameter"/>
+      <param name="predict_time_dt_pub_topic" value="/simulator/controller/predict_time_dt"/>
+      <param name="reset_object_sub_topic" value="/simulator/reset"/>
+      <param name="system_running_control_sub_topic" value="/system_running/control"/>
+      <param name="controller_running_hz" value="30"/>                                                        <!--The mpc controller running frequency -->
+      <param name="state_dim" value="3"/>
+      <param name="observe_dim" value="3"/>
+      <param name="input_dim" value="3"/>
+      <param name="control_window" value="5"/>
+      <param name="predict_window" value="8"/>
+      <param name="max_velocity" value = "1.0"/>
+      <param name="sample_time" value="0.33"/>
+      <param name="control_out_cost" value="0.0002"/>
+      <param name="tracking_cost" value="0.9"/>
+</node>
+
+<node name="simulator_fusion_controller" pkg="kf_mpc_controller4" type="fusion_controller_node2" output="screen">
+      <param name="mpc_controller_output_sub_topic" value="/simulator/mpc_controller/output1"/>                          <!-- This topic data from network communication -->
+      <param name="virtual_guide_output_sub_topic" value="/network/simulator/uav/command"/>                    <!-- This topic data publish the dt object position-->
+      <param name="virtual_guide_control_sub_topic" value="/network/simulator/virtual_guide/type"/>
+      <param name="virtual_guide_hz" value="30"/>
+      <param name="target_velocity_pub_topic" value="/simulator/model/input"/>
+      <param name="min_velocity" value="-1.0"/>
+      <param name="max_velocity" value="1.0"/>
+</node>
+
+<node name="object_move_simulator" pkg="kf_mpc_controller4" type="object_move_simulator_node4" output="screen">
+      <param name="object_input_sub_topic" value="/simulator/model/input"/>                            <!-- This topic data from controller -->
+      <param name="reset_object_sub_topic" value="/simulator/reset"/>
+      <param name="sensor_data_pub_topic" value="/simulator/position_sensor/data"/>                    <!-- This topic data to controller-->
+      <param name="start_simulator_pub_topic" value="/simulator/start"/>
+      <param name="simulator_run_hz" value="30"/>                                                      <!--The simulator running frequency -->
+      <param name="model_noise_mu" value="0.0"/>
+      <param name="model_noise_sigma" value="0.001"/>
+      <param name="sensor_noise_mu" value="0.0"/>
+      <param name="sensor_noise_sigma" value="0.001"/>
+      <param name="sample_time" value="0.16"/>
+</node>
+<node name="command_wrapper_simulator" pkg="global_virtual_guide" type="command_wrapper_node" output="screen">
+      <param name="system_running_id_sub_topic" value="/system_running/control"/>
+      <param name="guide_command_sub_topic" value="/simulator/virtual_guide/cmd"/>                                                     <!--The window size for predicting further system state(predicted steps)-->
+      <param name="controller_cmd_sub_topic" value="/simulator/mpc_controller/output"/>                    <!-- This topic data from kalman filter-->
+      <param name="command_pub_topic" value="/simulator/uav/command"/>
+      <param name="is_simulator" value="true"/>
+      <param name="running_frequency" value="30.0"/>
+</node>
+
+                                                 <!--Physical Object running-->
+<arg name="uav" default="physical_uav"/>
+<node name="dt_network_client_$(arg uav)" pkg="dt_network_client" type="dt_network_client" output="screen">
+      <param name="port" value="8080" />
+      <param name="ros_pub_topic" value="/$(arg uav)/from/Server/data" />
+      <param name="ros_sub_topic" value="/$(arg uav)/to/Server/data"/>
+      <param name="data_recv_rate_hz" value="1000"/>
+      <param name="server_ip" value="100.101.155.46"/>
+</node>
+
+<node name="uav_pack_center_uav" pkg="physical_message_pack" type="physical_message_pack_node" output="screen">
+      <param name="SourceID" value="101"/>
+      <param name="TargetID" value="1"/>
+      <param name="iot_pub_topic" value="/$(arg uav)/to/Server/data"/>
+      <param name="virtual_object_position_sub_topic" value="/V_UAV_1/LocalPosition/Pose"/>
+      <param name="virtual_guide_sub_topic" value="/physical_uav/command"/>
+      <param name="virtual_guide_control_sub_topic" value="/physical_uav/virtual_guide/type"/>
+      <param name="model_learner_control_sub_topic" value="/model_learner_control"/>
+</node>
+
+<node name="uav_msg_unpack_center" pkg="physical_message_unpack" type="physical_message_unpack" output="screen">
+      <param name="iot_msg_sub_topic" value="/$(arg uav)/from/Server/data"/>
+      <param name="local_position_msg_pub_topic" value="/physical_uav/local/position"/>
+      <param name="velocity_msg_pub_topic" value="/physical_uav/velocity"/>
+      <param name="dt_object_position_recv_hz" value="30.0"/>
+      <param name="v2p_delay_time_msg_pub_topic" value="/delay_time/v2p"/>
+      <param name="p2v_delay_time_msg_pub_topic" value="/delay_time/p2v"/>
+      <param name="update_model_msg_pub_topic" value="/updata_model/info"/>
+      <param name="object_move_position_pub_topic" value="/physical_uav/move/position"/>
+  </node>
+
+<node name="global_virtual_guide_wrapper" pkg="global_virtual_guide" type="global_virtual_guide_wrapper" output="screen">
+      <param name="physical_object_position_sub_topic" value="/V_UAV_1/LocalPosition/Pose"/>
+      <param name="predict_window" value="8"/>                                                     <!--The window size for predicting further system state(predicted steps)-->
+      <param name="predict_time_dt" value="0.033"/>                                                  <!--The predicted time step for least square-->
+      <param name="target_position_pub_topic" value="/physical_uav/controller/target_position"/>
+</node>
+
+<node name="physical_mpc_controller" pkg="global_virtual_guide" type="global_guide_controller" output="screen">
+      <param name="current_position_sub_topic" value="/physical_uav/local/position"/>                          <!-- This topic data from sensor measure by GPS or UWB or other located system -->
+      <param name="target_position_sub_topic" value="/physical_uav/controller/target_position"/>                           <!-- This tipic data from state predictor-->
+      <param name="controller_output_pub_topic" value="/physical_uav/controller/output"/>              <!-- This topic data to px4 controller-->
+      <param name="update_model_parameter_sub_topic" value="/model_learner/model_parameter"/>
+      <param name="predict_time_dt_pub_topic" value="/physical_uav/controller/predict_time_dt"/>
+      <param name="reset_object_sub_topic" value="/simulator/reset"/>
+      <param name="system_running_control_sub_topic" value="/system_running/control"/>
+      <param name="controller_running_hz" value="30"/>                                                        <!--The mpc controller running frequency -->
+      <param name="state_dim" value="3"/>
+      <param name="observe_dim" value="3"/>
+      <param name="input_dim" value="3"/>
+      <param name="control_window" value="5"/>
+      <param name="predict_window" value="8"/>
+      <param name="max_velocity" value = "1.0"/>
+</node>
+
+<node name="state_estimator_$(arg uav)" pkg="virtual_guide_predictor" type="state_estimator_node3" output="screen">
+      <param name="dt_obj_position_sub_topic" value="/physical_uav/move/position"/>                     <!-- This topic data from digital twin object -->
+      <param name="est_move_state_pub_topic" value="/physical_uav/current_move_state"/>                    <!-- This topic data from kalman filter-->
+      <param name="kf_information_pub_topic" value="/physical_uav/state_estimator/information"/>
+      <param name="kf_run_hz" value="30"/>                                                                 <!--The kalman filter running frequency -->
+      <param name="update_measure_err_k" value="45.0"/>                                                     <!-- The gain of update measured error-->
+</node>
+
+<node name="model_learn_wrapper_$(arg uav)" pkg="global_virtual_guide" type="model_learn_wrapper_node" output="screen">
+      <param name="controller_output_sub_topic" value="/physical_uav/virtual_guide/cmd"/>
+      <param name="target_cmd_pub_topic" value="/physical_uav/target_cmd"/>                                                     <!--The window size for predicting further system state(predicted steps)-->
+      <param name="est_move_state_sub_topic" value="/physical_uav/current_move_state"/>                    <!-- This topic data from kalman filter-->
+      <param name="est_velocity_pub_topic" value="/physical_uav/estimate/current/velocity"/>
+</node>
+
+<node name="model_learner_$(arg uav)" pkg="global_virtual_guide" type="global_guide_model_learner_node" output="screen">
+      <param name="local_position_sub_topic" value="/physical_uav/local/position"/>                     <!-- This topic data from digital twin object -->
+      <param name="target_velocity_sub_topic" value="/physical_uav/velocity"/>
+      <param name="update_model_parameter_pub_topic" value="/model_learner/model_parameter"/>                                                                                                        <!-- The gain of update measured error-->
+      <param name="model_learner_info_pub_topic" value="/model_learner/information"/>
+      <param name="model_learner_control_sub_topic" value="/model_learner/control"/>
+      <param name="model_learner_run_hz" value="30.0"/>
+      <param name="is_model_range" value="false"/>
+      <param name="model_err_x" value = "0.0018"/>
+      <param name="model_err_y" value = "0.0018"/>
+      <param name="model_err_z" value = "0.0018"/>
+      <param name="init_sample_time_x" value = "2.0"/>
+      <param name="init_sample_time_y" value = "2.0"/>
+      <param name="init_sample_time_z" value = "2.0"/>
+</node>
+<node name="command_wrapper_$(arg uav)" pkg="global_virtual_guide" type="command_wrapper_node" output="screen">
+      <param name="system_running_id_sub_topic" value="/system_running/control"/>
+      <param name="guide_command_sub_topic" value="/physical_uav/virtual_guide/cmd"/>                                                     <!--The window size for predicting further system state(predicted steps)-->
+      <param name="controller_cmd_sub_topic" value="/physical_uav/controller/output"/>                    <!-- This topic data from kalman filter-->
+      <param name="command_pub_topic" value="/physical_uav/command"/>
+      <param name="is_simulator" value="false"/>
+      <param name="running_frequency" value="30.0"/>
+</node>
+
+</launch>

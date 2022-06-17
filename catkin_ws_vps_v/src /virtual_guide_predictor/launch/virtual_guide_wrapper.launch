@@ -1,0 +1,9 @@
+<launch>
+<node name="virtual_guide_wrapper" pkg="kf_mpc_controller3" type="virtual_guide_wrapper_node" output="screen">
+      <param name="SourceID" value="1"/>
+      <param name="TargetID" value="201"/>
+      <param name="IotMessagePubTopic" value="/r_uav_0/msg_to_iot"/>
+      <param name="VirtualGuideSubTopic" value="/virtual_guide/cmd"/>
+      <param name="VirtualGuideControlSubTopic" value="/virtual_guide/change"/>
+</node>
+</launch>

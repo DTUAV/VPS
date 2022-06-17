@@ -1,0 +1,10 @@
+<launch>
+<node name="rc_controller" pkg="rc_control" type="rc_control" output="screen">
+      <param name="start_offboard_pub_topic" value="/uav1/mavros/rc/in"/>
+      <param name="target_object_position_pub_topic" value = "/ref_uav/pose"/>
+      <param name="start_offboard_ch" value="5"/>
+      <param name="land_ch" value="6"/>
+      <param name="start_sample_data_pub_topic" value="/start/sample_data"/>
+      <param name="end_sample_data_pub_topic" value="/end/sample_data"/>
+</node>
+</launch>

@@ -1,0 +1,11 @@
+<launch>
+<node name="fusion_controller" pkg="kf_mpc_controller4" type="fusion_controller_node2" output="screen">
+      <param name="mpc_controller_output_sub_topic" value="/mpc_controller/output"/>                          <!-- This topic data from network communication -->
+      <param name="virtual_guide_output_sub_topic" value="/virtual_guide/output"/>                    <!-- This topic data publish the dt object position-->
+      <param name="virtual_guide_control_sub_topic" value="/virtual_guide/type"/>
+      <param name="virtual_guide_hz" value="30"/>
+      <param name="target_velocity_pub_topic" value="/target/cmd"/>
+      <param name="min_velocity" value="-2.0"/>
+      <param name="max_velocity" value="2.0"/>
+</node>
+</launch>

@@ -1,0 +1,11 @@
+<launch>
+<node name="object_move_simulator" pkg="kf_mpc_controller" type="object_move_simulator_node" output="screen">
+      <param name="object_input_sub_topic" value="/simulator/model/input"/>                            <!-- This topic data from controller -->
+      <param name="sensor_data_pub_topic" value="/simulator/position_sensor/data"/>                    <!-- This topic data to controller-->
+      <param name="simulator_run_hz" value="50"/>                                                      <!--The simulator running frequency -->
+      <param name="model_noise_mu" value="0.0"/>
+      <param name="model_noise_sigma" value="0.004"/>
+      <param name="sensor_noise_mu" value="0.0"/>
+      <param name="sensor_noise_sigma" value="0.005"/>
+</node>
+</launch>

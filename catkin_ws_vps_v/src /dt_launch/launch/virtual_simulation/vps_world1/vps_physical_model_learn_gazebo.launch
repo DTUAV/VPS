@@ -1,0 +1,31 @@
+<launch>
+<arg name="uav" default="physical_uav"/>
+<node name="dt_network_client_$(arg uav)" pkg="dt_network_client" type="dt_network_client" output="screen">
+      <param name="port" value="8080" />
+      <param name="ros_pub_topic" value="/$(arg uav)/from/Server/data" />
+      <param name="ros_sub_topic" value="/$(arg uav)/to/Server/data"/>
+      <param name="data_recv_rate_hz" value="1000"/>
+      <param name="server_ip" value="100.101.155.46"/>
+</node>
+
+<node name="uav_pack_center_uav" pkg="physical_message_pack" type="physical_message_pack_node" output="screen">
+<param name="SourceID" value="101"/>
+<param name="TargetID" value="1"/>
+<param name="iot_pub_topic" value="/$(arg uav)/to/Server/data"/>
+<param name="virtual_object_position_sub_topic" value="/V_UAV_1/LocalPosition/Pose"/>
+<param name="virtual_guide_sub_topic" value="/physical_uav/virtual_guide/cmd"/>
+<param name="virtual_guide_control_sub_topic" value="/physical_uav/virtual_guide/type"/>
+<param name="model_learner_control_sub_topic" value="/model_learner_control"/>
+</node>
+
+<node name="uav_msg_unpack_center" pkg="physical_message_unpack" type="physical_message_unpack" output="screen">
+      <param name="iot_msg_sub_topic" value="/$(arg uav)/from/Server/data"/>
+      <param name="local_position_msg_pub_topic" value="/physical_uav/local/position"/>
+      <param name="velocity_msg_pub_topic" value="/physical_uav/velocity"/>
+      <param name="dt_object_position_recv_hz" value="30.0"/>
+      <param name="v2p_delay_time_msg_pub_topic" value="/delay_time/v2p"/>
+      <param name="p2v_delay_time_msg_pub_topic" value="/delay_time/p2v"/>
+      <param name="update_model_msg_pub_topic" value="/updata_model/info"/>
+      <param name="object_move_position_pub_topic" value="/physical_uav/current_position"/>
+  </node>
+</launch>

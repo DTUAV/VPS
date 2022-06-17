@@ -1,0 +1,44 @@
+<launch>
+<arg name="uav" default="uav_6"/>
+
+<node name="px4_velocity_control_wrapper_$(arg uav)" pkg="px4_simulation_wrapper" type="px4_velocity_control_wrapper" output="screen">
+      <param name="px4_ref_vel_msg_pub_topic" value="/$(arg uav)/mavros/setpoint_velocity/cmd_vel_unstamped"/>        <!--The Target Velocity Message to PX4-->
+      <param name="tgt_vel_msg_sub_topic" value="/$(arg uav)/target/cmd"/>                                            <!--The Target Velocity from Other Controller-->
+      <param name="px4_state_msg_sub_topic" value="/$(arg uav)/mavros/state"/>                                        <!--The State of PX4-->
+      <param name="px4_rc_msg_sub_topic" value="/$(arg uav)/mavros/rc/in"/>                                           <!--The RC Information from PX4-->
+      <param name="px4_arming_client_topic" value="/$(arg uav)/mavros/cmd/arming"/>                                   <!--The Arm to PX4-->
+      <param name="px4_set_mode_client_topic" value="/$(arg uav)/mavros/set_mode"/>                                   <!--The mode setting to PX4-->
+      <param name="run_frequen_hz" value="50.0"/>                                                          <!--The Frequen of Target Velocity Message To PX4-->
+      <param name="rc_start_ch" value="5"/>                                                                <!--The RC Channel of Start Vehicle-->
+      <param name="rc_land_ch" value="6"/>                                                                 <!--The RC Channel of Land Vehicle-->
+  </node>
+
+<node name="rc_controller_$(arg uav)" pkg="rc_control" type="rc_control" output="screen">
+      <param name="start_offboard_pub_topic" value="/$(arg uav)/mavros/rc/in"/>
+      <param name="target_object_position_pub_topic" value = "/$(arg uav)/ref_uav/pose"/>
+      <param name="start_offboard_ch" value="5"/>
+      <param name="land_ch" value="6"/>
+      <param name="start_sample_data_pub_topic" value="/start/sample_data"/>
+      <param name="end_sample_data_pub_topic" value="/end/sample_data"/>
+</node>
+
+
+<node name="sample_data" pkg="sample_data" type="sample_data_node" output="screen">
+      <param name="TargetVelocityPubName" value="/$(arg uav)/target/cmd"/>
+      <param name="CurrentVelocitySubName" value="/$(arg uav)/mavros/local_position/velocity_body"/>
+      <param name="CurrentPositionSubName" value="/$(arg uav)/mavros/local_position/pose"/>
+      <param name="StartSampleDataSubName" value="/start/sample_data"/>
+      <param name="EndSampleDataSubName" value="/end/sample_data"/>
+      <param name="MinVelocity" value="-2.0"/>
+      <param name="MaxVelocity" value="2.0"/>
+      <param name="MinRunningTime" value="1000"/>
+      <param name="MaxRunningTime" value="2000.0"/><!--ms-->
+      <param name="MinLimitRangeX" value="-10"/>
+      <param name="MinLimitRangeY" value="-10"/>
+      <param name="MinLimitRangeZ" value="0.5"/>
+      <param name="MaxLimitRangeX" value="10"/>
+      <param name="MaxLimitRangeY" value="10"/>
+      <param name="MaxLimitRangeZ" value="2"/>
+      <param name="FileName" value="/home/yyl/px4_ws/paper-vpc-2/paper-vpc-main/src/sample_data/data/data"/>
+  </node>
+</launch>

@@ -1,0 +1,84 @@
+<launch>
+<node name="dt_network_client" pkg="dt_network_client" type="dt_network_client" output="screen">
+      <param name="port" value="8080" />
+      <param name="ros_pub_topic" value="/from/Server/data" />
+      <param name="ros_sub_topic" value="/to/Server/data"/>
+      <param name="data_recv_rate_hz" value="1000"/>
+      <param name="server_ip" value="100.101.155.46"/>
+</node>
+
+<node name="uav_msg_pack_center" pkg="message_pack" type="uav_message_pack_node" output="screen">
+      <param name="SourceID" value="1"/>
+      <param name="TargetID" value="101"/>
+      <param name="IotMessagePubTopic" value="/to/Server/data"/>
+      <param name="GlobalPositionMessageSubTopic" value="/mavros/global_position/global"/>
+      <param name="LocalPositionMessageSubTopic" value="/mavros/local_position/pose"/>
+      <param name="LocalVelocityMessageSubTopic" value="/mavros/local_position/velocity_body"/>
+      <param name="UavStateMessageSubTopic" value="/mavros/state"/>
+      <param name="MessagePubFrequency" value="30"/>
+</node>
+
+<node name="controller_network_wrapper" pkg="kf_mpc_controller2" type="controller_network_wrapper_node2" output="screen">
+      <param name="network_message_sub_topic" value="/from/Server/data"/>                          <!-- This topic data from network communication -->
+      <param name="dt_object_position_pub_topic" value="/virtual/uav0/current_position"/>                    <!-- This topic data publish the dt object position-->
+</node>
+
+<node name="state_estimator" pkg="kf_mpc_controller2" type="state_estimator_node2" output="screen">                                                               <!--The kalman filter running frequency -->
+      <param name="dt_obj_position_sub_topic" value="/virtual/uav0/current_position"/>                     <!-- This topic data from digital twin object -->
+      <param name="est_move_state_pub_topic" value="/virtual/uav0/current_move_state"/>                    <!-- This topic data from kalman filter-->
+      <param name="kf_run_hz" value="30"/>                                                                 <!-- The kalman filter running frequency -->
+      <param name="update_measure_err_k" value="45.0"/>                                                     <!-- The gain of update measured error-->
+</node>
+
+<node name="state_predictor" pkg="kf_mpc_controller2" type="state_predictor_node2" output="screen">
+      <param name="predict_positiong_pub_topic" value="/controller/target_position"/>           <!-- This topic data from least square predict -->
+      <param name="system_state_sub_topic" value="/virtual/uav0/current_move_state"/>              <!-- This topic data from kalman filter-->
+      <param name="predict_time_dt_sub_topic" value="/state_predictor/predict_time_dt"/>           <!--This topic data from mpc controller-predict time-->
+      <param name="predictor_run_hz" value="30"/>                                                  <!--The kalman filter running frequency -->
+      <param name="save_data_window" value="20"/>                                                  <!--The window size for save data from kalman filter -->
+      <param name="max_predict_data_window" value="10"/>                                                <!--The window size of state data for least square predictior -->
+      <param name="min_predict_data_window" value="4"/>                                                  <!--The window size of state data for least square predictior -->
+      <param name="predict_window" value="8"/>                                                     <!--The window size for predicting further system state(predicted steps)-->
+      <param name="predict_order" value="3"/>                                                      <!--The predicted function order-->
+      <param name="predict_time_dt" value="0.33"/>                                                  <!--The predicted time step for least square-->
+      <param name="queue_check_error" value="0.01"/>                                              <!--The error value to check the system state queue to used different predict ways-->
+      <param name="max_velocity_x" value = "2.0"/>
+      <param name="max_velocity_y" value = "2.0"/>
+      <param name="max_velocity_z" value = "2.0"/>
+</node>
+
+<node name="px4_position_wrapper" pkg="px4_position_wrapper" type="px4_position_wrapper" output="screen">
+      <param name="px4_local_pose_sub_topic" value="/mavros/local_position/pose"/>                  <!--The Local Position of PX4-->
+      <param name="uav_local_pose_pub_topic" value="/uav/local_position/pose"/>                      <!--The Local Position of Uav-->
+      <param name="px4_rc_msg_sub_topic" value="/mavros/rc/in"/>                                           <!--The RC Information from PX4-->
+      <param name="rc_start_ch" value="5"/>                                                                <!--The RC Channel of Start Vehicle-->
+  </node>
+
+<node name="mpc_controller" pkg="kf_mpc_controller2" type="mpc_controller_node2" output="screen">
+      <param name="current_position_sub_topic" value="/uav/local_position/pose"/>                          <!-- This topic data from sensor measure by GPS or UWB or other located system -->
+      <param name="target_position_sub_topic" value="/controller/target_position"/>                           <!-- This tipic data from state predictor-->
+      <param name="controller_output_pub_topic" value="/other_controller/target_velocity"/>              <!-- This topic data to px4 controller-->
+      <param name="update_model_parameter_sub_topic" value="/model_learner/model_parameter"/>
+      <param name="predict_time_dt_pub_topic" value="/controller/predict_time_dt"/>
+      <param name="controller_running_hz" value="50"/>                                                        <!--The mpc controller running frequency -->
+      <param name="state_dim" value="3"/>
+      <param name="observe_dim" value="3"/>
+      <param name="input_dim" value="3"/>
+      <param name="control_window" value="5"/>
+      <param name="predict_window" value="8"/>
+      <param name="max_velocity" value = "4.0"/>
+</node>
+
+<node name="px4_velocity_rc_control_wrapper" pkg="px4_control_wrapper" type="px4_velocity_rc_control_wrapper" output="screen">
+      <param name="px4_ref_vel_msg_pub_topic" value="/mavros/setpoint_velocity/cmd_vel_unstamped"/>        <!--The Target Velocity Message to PX4-->
+      <param name="tgt_vel_msg_sub_topic" value="/other_controller/target_velocity"/>                      <!--The Target Velocity from Other Controller-->
+      <param name="px4_rc_msg_sub_topic" value="/mavros/rc/in"/>                                           <!--The RC Information from PX4-->
+      <param name="run_frequen_hz" value="20.0"/>                                                          <!--The Frequen of Target Velocity Message To PX4-->
+      <param name="rc_start_ch" value="5"/>                                                                <!--The RC Channel of Start Vehicle-->
+      <param name="rc_land_ch" value="6"/>                                                                 <!--The RC Channel of Land Vehicle-->
+</node>
+
+<include file="$(find mavros)/launch/px4.launch">
+</include>
+
+</launch>

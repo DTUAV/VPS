@@ -1,0 +1,68 @@
+<launch>
+<arg name="uav" default="v_uav_0"/>
+
+<node name="dt_network_client_$(arg uav)" pkg="dt_network_client" type="dt_network_client" output="screen">
+      <param name="port" value="8080" />
+      <param name="ros_pub_topic" value="/$(arg uav)/from/Server/data" />
+      <param name="ros_sub_topic" value="/$(arg uav)/to/Server/data"/>
+      <param name="data_recv_rate_hz" value="1000"/>
+      <param name="server_ip" value="100.101.155.46"/>
+</node>
+
+<node name="uav_msg_pack_center_$(arg uav)" pkg="message_pack" type="uav_message_pack_node" output="screen">
+      <param name="SourceID" value="101"/>
+      <param name="TargetID" value="1"/>
+      <param name="IotMessagePubTopic" value="/$(arg uav)/to/Server/data"/>
+      <param name="GlobalPositionMessageSubTopic" value="/$(arg uav)/mavros/global_position/global"/>
+      <param name="LocalPositionMessageSubTopic" value="/$(arg uav)/mavros/local_position/pose"/>
+      <param name="LocalVelocityMessageSubTopic" value="/$(arg uav)/mavros/local_position/velocity_body"/>
+      <param name="UavStateMessageSubTopic" value="/$(arg uav)/mavros/state"/>
+      <param name="MessagePubFrequency" value="30"/>
+</node>
+
+<node name="virtual_guide_wrapper" pkg="kf_mpc_controller3" type="virtual_guide_wrapper_node" output="screen">
+      <param name="SourceID" value="101"/>
+      <param name="TargetID" value="1"/>
+      <param name="IotMessagePubTopic" value="/$(arg uav)/to/Server/data"/>
+      <param name="VirtualGuideSubTopic" value="/virtual_guide/cmd"/>
+      <param name="VirtualGuideControlSubTopic" value="/virtual_guide/change"/>
+</node>
+
+<node name="controller_network_wrapper_$(arg uav)" pkg="kf_mpc_controller3" type="controller_network_wrapper_node3" output="screen">
+      <param name="network_message_sub_topic" value="/$(arg uav)/from/Server/data"/>                          <!-- This topic data from network communication -->
+      <param name="dt_object_position_pub_topic" value="/physical/$(arg uav)/current_position"/>                    <!-- This topic data publish the dt object position-->
+      <param name="dt_object_position_recv_hz" value="30.0"/>
+</node>
+
+<node name="state_estimator_$(arg uav)" pkg="kf_mpc_controller3" type="state_estimator_node3" output="screen">
+      <param name="dt_obj_position_sub_topic" value="/physical/$(arg uav)/current_position"/>                     <!-- This topic data from digital twin object -->
+      <param name="est_move_state_pub_topic" value="/physical/$(arg uav)/current_move_state"/>                    <!-- This topic data from kalman filter-->
+      <param name="kf_information_pub_topic" value="/state_estimator/information"/>
+      <param name="kf_run_hz" value="30"/>                                                                 <!--The kalman filter running frequency -->
+      <param name="update_measure_err_k" value="45.0"/>                                                     <!-- The gain of update measured error-->
+</node>
+
+<node name="state_predictor_$(arg uav)" pkg="kf_mpc_controller3" type="state_predictor_node3" output="screen">
+      <param name="predict_positiong_pub_topic" value="/$(arg uav)/controller/target_position"/>           <!-- This topic data from least square predict -->
+      <param name="system_state_sub_topic" value="/physical/$(arg uav)/current_move_state"/>              <!-- This topic data from kalman filter-->
+      <param name="predict_time_dt_sub_topic" value="/$(arg uav)/controller/predict_time_dt"/>           <!--This topic data from mpc controller-predict time-->
+      <param name="state_predictor_info_pub_topic" value="/$(arg uav)/state_predictor/information"/>
+      <param name="predictor_x_pub_topic" value="/R_UAV_1/predictor/x"/>
+      <param name="predictor_y_pub_topic" value="/R_UAV_1/predictor/y"/>
+      <param name="predictor_z_pub_topic" value="/R_UAV_1/predictor/z"/>
+      <param name="predictor_cur_position_pub_topic" value="/R_UAV_1/position/local"/>
+      <param name="predictor_run_hz" value="30"/>                                                  <!--The kalman filter running frequency -->
+      <param name="save_data_window" value="20"/>                                                  <!--The window size for save data from kalman filter -->
+      <param name="max_predict_data_window" value="10"/>                                                <!--The window size of state data for least square predictior -->
+      <param name="min_predict_data_window" value="4"/>                                                  <!--The window size of state data for least square predictior -->
+      <param name="predict_window" value="3"/>                                                     <!--The window size for predicting further system state(predicted steps)-->
+      <param name="predict_order" value="3"/>                                                      <!--The predicted function order-->
+      <param name="predict_time_dt" value="0.03"/>                                                  <!--The predicted time step for least square-->
+      <param name="queue_check_error" value="0.001"/>                                              <!--The error value to check the system state queue to used different predict ways-->
+      <param name="max_velocity_x" value = "2.0"/>
+      <param name="max_velocity_y" value = "2.0"/>
+      <param name="max_velocity_z" value = "2.0"/>
+</node>
+
+
+</launch>

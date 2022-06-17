@@ -1,0 +1,67 @@
+<launch>
+<node name="dt_network_client" pkg="dt_network_client" type="dt_network_client" output="screen">
+      <param name="port" value="8080" />
+      <param name="ros_pub_topic" value="/from/Server/data" />
+      <param name="ros_sub_topic" value="/to/Server/data"/>
+      <param name="data_recv_rate_hz" value="1000"/>
+      <param name="server_ip" value="100.101.155.46"/>
+</node>
+
+
+<node name="get_position_data_true_uav" pkg="get_data_set" type="get_position_data_true_node" output="screen">
+      <param name="SourceID" value="1"/>
+      <param name="TargetID" value="201"/>
+      <param name="IotMessagePubTopic" value="/to/Server/data"/>
+      <param name="LocalPositionMessageSubTopic" value="/uav_6/mavros/local_position/pose"/>
+      <param name="MessagePubFrequency" value="30.0"/>
+</node>
+
+<node name="mission_point" pkg="mission_point" type="mission_point_node" output="screen">
+    <rosparam file="$(find mission_point)/config/mission_point.yaml" command="load"/>
+    <param name="mission_point_err" value="0.05"/>
+    <param name="mission_control_sub_topic" value="/mission/start"/>
+    <param name="mission_change_type" value="0"/>                 <!--0:Auto 1:Other-->
+    <param name="feeback_sub_topic" value="/uav_6/mavros/local_position/pose"/>
+    <param name="next_mission_point_sub_topic" value="/mission/change"/>
+    <param name="mission_point_pub_topic" value="/target/position"/>
+    <param name="yawl_file_name" value="mission_point"/>
+    <param name="circle_run" value="0"/>                          <!--0:Not Circle Run. 1:Circle Run-->
+  </node>
+
+<node name="velocity_command_uav" pkg="get_data_set" type="velocity_command_node" output="screen">
+      <param name="K" value="-0.5"/>
+      <param name="MaxVelocityX" value="2.0"/>
+      <param name="MaxVelocityY" value="2.0"/>
+      <param name="MaxVelocityZ" value="2.0"/>
+      <param name="TargetPositionMsgSubTopic" value = "/target/position"/>
+      <param name="LocalPositionMsgSubTopic" value="/uav_6/mavros/local_position/pose"/>
+      <param name="TargetVelocityMsgPubTopic" value="/command/velocity"/>
+      <param name="CommandRunFrequency" value="20.0"/>
+</node>
+
+<node name="px4_get_data_set_wrapper" pkg="px4_simulation_wrapper" type="px4_get_data_set_wrapper" output="screen">
+      <param name="px4_ref_vel_msg_pub_topic" value="/uav_6/mavros/setpoint_velocity/cmd_vel_unstamped"/>        <!--The Target Velocity Message to PX4-->
+      <param name="start_mission_msg_pub_topic" value="/mission/start"/>                                   <!--The Message will Publish to Mission Points-->
+      <param name="chage_mission_msg_pub_topic" value="/mission/change"/>                                  <!--The Message will Publish to Mission Points-->
+      <param name="tgt_vel_msg_sub_topic" value="/command/velocity"/>                                      <!--The Target Velocity from Other Controller-->
+      <param name="px4_state_msg_sub_topic" value="/uav_6/mavros/state"/>                                        <!--The State of PX4-->
+      <param name="px4_rc_msg_sub_topic" value="/uav_6/mavros/rc/in"/>                                           <!--The RC Information from PX4-->
+      <param name="px4_arming_client_topic" value="/uav_6/mavros/cmd/arming"/>                                   <!--The Arm to PX4-->
+      <param name="px4_set_mode_client_topic" value="/uav_6/mavros/set_mode"/>                                   <!--The mode setting to PX4-->
+      <param name="run_frequen_hz" value="20.0"/>                                                          <!--The Frequen of Target Velocity Message To PX4-->
+      <param name="rc_start_ch" value="5"/>                                                                <!--The RC Channel of Start Vehicle-->
+      <param name="rc_land_ch" value="6"/>                                                                 <!--The RC Channel of Land Vehicle-->
+      <param name="rc_start_mission_ch" value ="7"/>                                                       <!--The RC Channel of Start Mission-->
+      <param name="rc_change_mission_ch" value="8"/>                                                       <!--The RC Channel of Change Mission-->
+</node>
+
+<node name="rc_controller" pkg="rc_control" type="rc_control" output="screen">
+      <param name="start_offboard_pub_topic" value="/uav_6/mavros/rc/in"/>
+      <param name="target_object_position_pub_topic" value = "/ref_uav/pose"/>
+      <param name="start_offboard_ch" value="5"/>
+      <param name="land_ch" value="6"/>
+      <param name="rc_start_mission_ch" value ="7"/>
+      <param name="rc_change_mission_ch" value ="8"/>
+</node>
+
+</launch>

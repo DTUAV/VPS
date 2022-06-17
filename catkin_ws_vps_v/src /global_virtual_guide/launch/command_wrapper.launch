@@ -1,0 +1,10 @@
+<launch>
+<node name="command_wrapper" pkg="global_virtual_guide" type="command_wrapper_node" output="screen">
+      <param name="system_running_id_sub_topic" value="/system_running/control"/>
+      <param name="guide_command_sub_topic" value="/physical_uav/virtual_guide/cmd"/>                                                     <!--The window size for predicting further system state(predicted steps)-->
+      <param name="controller_cmd_sub_topic" value="/physical_uav/controller/output"/>                    <!-- This topic data from kalman filter-->
+      <param name="command_pub_topic" value="/physical_uav/command"/>
+      <param name="is_simulator" value="false"/>
+      <param name="running_frequency" value="30.0"/>
+</node>
+</launch>

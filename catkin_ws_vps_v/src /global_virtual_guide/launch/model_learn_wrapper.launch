@@ -1,0 +1,8 @@
+<launch>
+<node name="model_learn_wrapper_wrapper" pkg="global_virtual_guide" type="model_learn_wrapper_wrapper" output="screen">
+      <param name="controller_output_sub_topic" value="/virtual_guide/cmd"/>
+      <param name="target_cmd_pub_topic" value="/target_cmd"/>                                                     <!--The window size for predicting further system state(predicted steps)-->
+      <param name="est_move_state_sub_topic" value="/physical_uav/current_move_state"/>                    <!-- This topic data from kalman filter-->
+      <param name="est_velocity_pub_topic" value="/physical_uav/current/velocity"/>
+</node>
+</launch>

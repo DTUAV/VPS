@@ -1,0 +1,9 @@
+float64 mpc_output_x
+float64 mpc_output_y
+float64 mpc_output_z
+float64 guidance_output_x
+float64 guidance_output_y
+float64 guidance_output_z
+float64 target_output_x
+float64 target_output_y
+float64 target_output_z

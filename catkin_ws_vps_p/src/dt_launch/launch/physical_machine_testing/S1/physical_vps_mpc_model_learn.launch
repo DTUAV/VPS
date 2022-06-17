@@ -1,0 +1,79 @@
+<launch>
+<node name="model_learn_wrapper" pkg="model_learn_wrapper" type="model_learn_wrapper_node" output="screen">
+      <param name="LocalPositionSubTopic" value="/uav/local_position/local_pose"/>
+      <param name="TargetPositionPubTopic" value="/controller/target_position"/>
+      <param name="MinRangeX" value="-1"/>
+      <param name="MinRangeY" value="-1"/>
+      <param name="MinRangeZ" value="0.6"/>
+      <param name="MaxRangeX" value="1"/>
+      <param name="MaxRangeY" value="1"/>
+      <param name="MaxRangeZ" value="1"/>
+      <param name="CheckError" value="0.01"/>
+      <param name="PredictedWindow" value="8"/>
+  </node>
+<node name="mpc_controller" pkg="kf_mpc_controller4" type="mpc_controller_node4" output="screen">
+      <param name="current_position_sub_topic" value="/uav/local_position/local_pose"/>                          <!-- This topic data from sensor measure by GPS or UWB or other located system -->
+      <param name="target_position_sub_topic" value="/controller/target_position"/>                           <!-- This tipic data from state predictor-->
+      <param name="controller_output_pub_topic" value="/other_controller/target_velocity"/>              <!-- This topic data to px4 controller-->
+      <param name="update_model_parameter_sub_topic" value="/model_learner/model_parameter"/>
+      <param name="predict_time_dt_pub_topic" value="/controller/predict_time_dt"/>
+      <param name="controller_running_hz" value="30"/>                                                        <!--The mpc controller running frequency -->
+      <param name="state_dim" value="3"/>
+      <param name="observe_dim" value="3"/>
+      <param name="input_dim" value="3"/>
+      <param name="control_window" value="5"/>
+      <param name="predict_window" value="8"/>
+      <param name="max_velocity" value = "1.0"/>
+      <param name="sample_time" value="0.33"/><!--0.53-->
+      <param name="out_cost" value="0.00020"/><!--0.00025-->
+      <param name="tracking_cost" value="0.9"/>
+</node>
+
+<node name="model_learner" pkg="kf_mpc_controller4" type="model_learner_node4" output="screen">
+      <param name="local_position_sub_topic" value="/uav/local_position/local_pose"/>                     <!-- This topic data from digital twin object -->
+      <param name="target_velocity_sub_topic" value="/mavros/local_position/velocity_body"/>                    <!-- This topic data from kalman filter-->
+      <param name="update_model_parameter_pub_topic" value="/model_learner/model_parameter"/>                                                                                                        <!-- The gain of update measured error-->
+      <param name="model_learner_info_pub_topic" value="/model_learner/information"/>
+      <param name="model_learner_control_sub_topic" value="/model_learner/control"/>
+      <param name="model_learner_run_hz" value="30.0"/>
+      <param name="is_model_range" value="false"/>
+      <param name="model_err_x" value = "0.0018"/>
+      <param name="model_err_y" value = "0.0018"/>
+      <param name="model_err_z" value = "0.0018"/>
+      <param name="init_sample_time_x" value = "2"/>
+      <param name="init_sample_time_y" value = "2"/>
+      <param name="init_sample_time_z" value = "2"/>
+</node>
+
+<node name="fusion_controller" pkg="kf_mpc_controller4" type="fusion_controller_node2" output="screen">
+      <param name="mpc_controller_output_sub_topic" value="/other_controller/target_velocity"/>
+      <param name="virtual_guide_output_sub_topic" value="/virtual_guide/cmd"/>
+      <param name="virtual_guide_control_sub_topic" value="/virtual_guide/type"/>
+      <param name="virtual_guide_hz" value="30"/>
+      <param name="target_velocity_pub_topic" value="/target/cmd"/>
+      <param name="min_velocity" value="-0.7"/>
+      <param name="max_velocity" value="0.7"/>
+      <param name="controller_info_pub_topic" value="/controller_info"/>
+</node>
+
+<!--    The Velocity Control Wrapper of PX4.   -->
+<node name="px4_velocity_rc_control_wrapper" pkg="px4_control_wrapper" type="px4_velocity_rc_control_wrapper" output="screen">
+     <param name="px4_ref_vel_msg_pub_topic" value="/mavros/setpoint_velocity/cmd_vel_unstamped"/>        <!--The Target Velocity Message to PX4-->
+     <param name="tgt_vel_msg_sub_topic" value="/target/cmd"/>                                            <!--The Target Velocity from Other Controller-->
+     <param name="px4_rc_msg_sub_topic" value="/mavros/rc/in"/>                                           <!--The RC Information from PX4-->
+     <param name="run_frequen_hz" value="50.0"/>                                                          <!--The Frequen of Target Velocity Message To PX4-->
+     <param name="rc_start_ch" value="5"/>                                                                <!--The RC Channel of Start Vehicle-->
+     <param name="rc_land_ch" value="6"/>                                                                 <!--The RC Channel of Land Vehicle-->
+     <param name="is_check_data_valid" value="true"/>
+     <param name="data_valid_sub_topic" value="/uwb0/data/valid"/>
+     <param name="is_local_pos" value="true"/>
+     <param name="uav_pos_sub_topic" value="/mavros/local_position/pose"/>
+     <param name="uav_local_pos_pub_topic" value="/uav/local_position/local_pose"/>
+</node>
+
+<!--    The Connection of Onboard Computer and PX4.   -->
+
+<include file="$(find mavros)/launch/px4.launch">
+</include>
+
+</launch>

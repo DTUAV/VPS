@@ -1,0 +1,14 @@
+<launch>
+<node name="model_learn_wrapper" pkg="model_learn_wrapper" type="model_learn_wrapper_node" output="screen">
+      <param name="LocalPositionSubTopic" value="/mavros/local_position/pose"/>
+      <param name="TargetPositionPubTopic" value="/target/position"/>
+      <param name="MinRangeX" value="-2"/>
+      <param name="MinRangeY" value="-2"/>
+      <param name="MinRangeZ" value="0.6"/>
+      <param name="MaxRangeX" value="2"/>
+      <param name="MaxRangeY" value="2"/>
+      <param name="MaxRangeZ" value="2"/>
+      <param name="CheckError" value="0.05"/>
+      <param name="PredictedWindow" value="8"/>
+  </node>
+</launch>

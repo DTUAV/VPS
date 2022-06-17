@@ -1,0 +1,16 @@
+<launch>
+<node name="mpc_controller" pkg="kf_mpc_controller3" type="mpc_controller_node3" output="screen">
+      <param name="current_position_sub_topic" value="/simulator/position_sensor/data"/>                          <!-- This topic data from sensor measure by GPS or UWB or other located system -->
+      <param name="target_position_sub_topic" value="/controller/target_position"/>                           <!-- This tipic data from state predictor-->
+      <param name="controller_output_pub_topic" value="/simulator/model/input"/>              <!-- This topic data to px4 controller-->
+      <param name="update_model_parameter_sub_topic" value="/model_learner/model_parameter"/>
+      <param name="predict_time_dt_pub_topic" value="/controller/predict_time_dt"/>
+      <param name="controller_running_hz" value="50"/>                                                        <!--The mpc controller running frequency -->
+      <param name="state_dim" value="3"/>
+      <param name="observe_dim" value="3"/>
+      <param name="input_dim" value="3"/>
+      <param name="control_window" value="5"/>
+      <param name="predict_window" value="8"/>
+      <param name="max_velocity" value = "2.0"/>
+</node>
+</launch>

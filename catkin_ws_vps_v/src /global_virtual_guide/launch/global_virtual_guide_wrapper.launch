@@ -1,0 +1,8 @@
+<launch>
+<node name="global_virtual_guide_wrapper" pkg="global_virtual_guide" type="global_virtual_guide_wrapper" output="screen">
+      <param name="physical_object_position_sub_topic" value="/physical_uav/position"/>
+      <param name="predict_window" value="8"/>                                                     <!--The window size for predicting further system state(predicted steps)-->
+      <param name="predict_time_dt" value="0.33"/>                                                  <!--The predicted time step for least square-->
+      <param name="target_position_pub_topic" value="/controller/target/position"/>
+</node>
+</launch>

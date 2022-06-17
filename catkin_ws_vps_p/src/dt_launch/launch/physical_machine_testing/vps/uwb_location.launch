@@ -1,0 +1,23 @@
+<launch>
+<node pkg="nlink_parser" type="linktrack" name="linktrack0" output="screen">
+    <param name="port_name" value="/dev/usb_uwb" />
+    <param name="baud_rate" value="921600" />
+    <param name="SendDataMsgTopic" value="/uwb0/msg_to_other"/>
+    <param name="UwbInforMsgTopic" value="/uwb0/information"/>
+    <param name="RecvDataMsgTopic" value="/uwb0/msg_from_other"/>
+</node>
+<node pkg="uwb_wrapper" type="uwb_wrapper_node" name="uwb_wrapper_node" output="screen">
+    <param name="UwbInforMsgTopic" value="/uwb0/information"/>
+    <param name="DistanceMsgTopic" value="/mavros/distance_sensor/hrlv_ez4_pub"/>
+    <param name="UwbPosMsgTopic" value ="/mavros/vision_pose/pose"/>
+    <param name="UwbDistanceTopic" value="/uwb0/distance"/>
+    <param name="UwbInstallHeigh" value="3.0"/>
+    <param name="LocalPositionModel" value="true"/>
+    <param name="VisonPosPubHz" value="10.0"/> <!--no used, the frequency of vision pose = the frequency of uwb information message-->
+    <param name="DataValidMsgPubTopic" value="/uwb0/data/valid"/>
+</node>
+
+<include file="$(find mavros)/launch/px4.launch">
+</include>
+
+</launch>

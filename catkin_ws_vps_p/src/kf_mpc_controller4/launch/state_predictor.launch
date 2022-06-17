@@ -1,0 +1,19 @@
+<launch>
+<node name="state_predictor" pkg="kf_mpc_controller2" type="state_predictor_node2" output="screen">
+      <param name="predict_positiong_pub_topic" value="/controller/target_position"/>           <!-- This topic data from least square predict -->
+      <param name="system_state_sub_topic" value="/virtual/uav0/current_move_state"/>              <!-- This topic data from kalman filter-->
+      <param name="predict_time_dt_sub_topic" value="/state_predictor/predict_time_dt"/>           <!--This topic data from mpc controller-predict time-->
+      <param name="state_predictor_info_pub_topic" value="/state_predictor/information"/>
+      <param name="predictor_run_hz" value="30"/>                                                  <!--The kalman filter running frequency -->
+      <param name="save_data_window" value="20"/>                                                  <!--The window size for save data from kalman filter -->
+      <param name="max_predict_data_window" value="10"/>                                                <!--The window size of state data for least square predictior -->
+      <param name="min_predict_data_window" value="4"/>                                                  <!--The window size of state data for least square predictior -->
+      <param name="predict_window" value="8"/>                                                     <!--The window size for predicting further system state(predicted steps)-->
+      <param name="predict_order" value="3"/>                                                      <!--The predicted function order-->
+      <param name="predict_time_dt" value="0.33"/>                                                  <!--The predicted time step for least square-->
+      <param name="queue_check_error" value="0.01"/>                                              <!--The error value to check the system state queue to used different predict ways-->
+      <param name="max_velocity_x" value = "5.0"/>
+      <param name="max_velocity_y" value = "5.0"/>
+      <param name="max_velocity_z" value = "5.0"/>
+</node>
+</launch>

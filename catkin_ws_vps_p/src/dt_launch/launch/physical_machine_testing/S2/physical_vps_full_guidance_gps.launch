@@ -1,0 +1,68 @@
+<launch>
+
+                            <!--    The Connection of Onboard Computer and PX4.   -->
+<include file="$(find mavros)/launch/px4.launch">
+</include>
+                            <!--    The Connection of Onboard Computer and Network Server.   -->
+<node name="dt_network_client" pkg="dt_network_client" type="dt_network_client" output="screen">
+      <param name="port" value="8080" />
+      <param name="ros_pub_topic" value="/from/Server/data" />
+      <param name="ros_sub_topic" value="/to/Server/data"/>
+      <param name="data_recv_rate_hz" value="1000"/>
+      <param name="server_ip" value="100.101.155.46"/>
+</node>
+                            <!--    The UAV Information are packed and sent to the Network Server.   -->
+<node name="uav_msg_pack_center" pkg="message_pack" type="uav_message_pack_node" output="screen">
+      <param name="SourceID" value="1"/>
+      <param name="TargetID" value="101"/>
+      <param name="IotMessagePubTopic" value="/to/Server/data"/>
+      <param name="GlobalPositionMessageSubTopic" value="/mavros/global_position/global"/>
+      <param name="LocalPositionMessageSubTopic" value="/uav/local_position/local_pose"/>
+      <param name="LocalVelocityMessageSubTopic" value="/mavros/local_position/velocity_body"/>
+      <param name="UavStateMessageSubTopic" value="/mavros/state"/>
+      <param name="MessagePubFrequency" value="30"/>
+      <param name="ObjectMotionModelMessageSubTopic" value="/model_learner/model_parameter"/>
+      <param name="NetworkDelayTimeMessageSubTopic" value="/network_delay/recv_delay"/>
+</node>
+                            <!--    The MPC Tracking Controller Wrapper.   -->
+<node name="controller_network_wrapper" pkg="kf_mpc_controller4" type="controller_network_wrapper_node4" output="screen">
+      <param name="network_message_sub_topic" value="/from/Server/data"/>                               <!-- This topic data from network communication -->
+      <param name="dt_object_position_pub_topic" value="/virtual/current_position"/>                    <!-- This topic data publish the dt object position-->
+      <param name="virtual_guide_pub_topic" value="/virtual_guide/cmd"/>
+      <param name="virtual_guide_control_pub_topic" value="/virtual_guide/type"/>
+      <param name="dt_object_position_recv_hz" value="30.0"/>                                           <!-- This equal to virtual object position published frequency. -->
+      <param name="is_unity" value="false"/>
+      <param name="network_delay_pub_topic" value="/network_delay/recv_delay"/>
+      <param name="network_delay_pub_hz" value="30.0"/>
+      <param name="predict_window" value="8"/>                                                          <!--The window size for predicting further system state(predicted steps)-->
+      <param name="predict_time_dt" value="0.033"/>                                                     <!--The predicted time step for least square-->
+      <param name="target_position_pub_topic" value="/controller/target/position"/>
+      <param name="model_learner_control_pub_topic" value="/model_learner/control"/>
+</node>
+                            <!--    The Fusion Moduel to Deal with the Output of MPC Controller and Virtual Guidance.   -->
+<node name="fusion_controller" pkg="kf_mpc_controller4" type="fusion_controller_node2" output="screen">
+      <param name="mpc_controller_output_sub_topic" value="/other_controller/target_velocity"/>
+      <param name="virtual_guide_output_sub_topic" value="/virtual_guide/cmd"/>
+      <param name="virtual_guide_control_sub_topic" value="/virtual_guide/type"/>
+      <param name="virtual_guide_hz" value="30"/>
+      <param name="target_velocity_pub_topic" value="/target/cmd"/>
+      <param name="min_velocity" value="-1.0"/>
+      <param name="max_velocity" value="1.0"/>
+      <param name="controller_info_pub_topic" value="/controller_info"/>
+</node>
+                             <!--    The Velocity Control Wrapper of PX4.   -->
+<node name="px4_velocity_rc_control_wrapper" pkg="px4_control_wrapper" type="px4_velocity_rc_control_wrapper" output="screen">
+     <param name="px4_ref_vel_msg_pub_topic" value="/mavros/setpoint_velocity/cmd_vel_unstamped"/>        <!--The Target Velocity Message to PX4-->
+     <param name="tgt_vel_msg_sub_topic" value="/target/cmd"/>                                            <!--The Target Velocity from Other Controller-->
+     <param name="px4_rc_msg_sub_topic" value="/mavros/rc/in"/>                                           <!--The RC Information from PX4-->
+     <param name="run_frequen_hz" value="50.0"/>                                                          <!--The Frequen of Target Velocity Message To PX4-->
+     <param name="rc_start_ch" value="5"/>                                                                <!--The RC Channel of Start Vehicle-->
+     <param name="rc_land_ch" value="6"/>                                                                 <!--The RC Channel of Land Vehicle-->
+     <param name="is_check_data_valid" value="false"/>
+     <param name="data_valid_sub_topic" value="/uav0/data/valid"/><!--The RC Channel of Land Vehicle-->
+     <param name="is_local_pos" value="true"/>
+     <param name="uav_pos_sub_topic" value="/mavros/local_position/pose"/>
+     <param name="uav_local_pos_pub_topic" value="/uav/local_position/local_pose"/>
+</node>
+
+</launch>

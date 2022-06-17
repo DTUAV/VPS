@@ -1,0 +1,87 @@
+<launch>
+
+<arg name="uav" default="V_UAV_1"/>
+
+<node name="dt_network_client_$(arg uav)" pkg="dt_network_client" type="dt_network_client" output="screen">
+      <param name="port" value="8080" />
+      <param name="ros_pub_topic" value="/$(arg uav)/from/Server/data" />
+      <param name="ros_sub_topic" value="/$(arg uav)/to/Server/data"/>
+      <param name="data_recv_rate_hz" value="1000"/>
+      <param name="server_ip" value="100.101.155.46"/>
+</node>
+
+<node name="uav_pack_center_uav" pkg="physical_message_pack" type="physical_message_pack_node" output="screen">
+      <param name="SourceID" value="101"/>
+      <param name="TargetID" value="1"/>
+      <param name="iot_pub_topic" value="/$(arg uav)/to/Server/data"/>
+      <param name="virtual_object_position_sub_topic" value="/$(arg uav)/LocalPosition/Pose"/>
+      <param name="virtual_guide_sub_topic" value="/virtual_guide/cmd"/>
+      <param name="virtual_guide_control_sub_topic" value="/virtual_guide/type"/>
+      <param name="model_learner_control_sub_topic" value="/model_learner_control"/>
+</node>
+
+<node name="uav_msg_unpack_center" pkg="physical_message_unpack" type="physical_message_unpack" output="screen">
+      <param name="iot_msg_sub_topic" value="/$(arg uav)/from/Server/data"/>
+      <param name="local_position_msg_pub_topic" value="/phsical_uav/local/position"/>
+      <param name="dt_object_position_recv_hz" value="30.0"/>
+      <param name="v2p_delay_time_msg_pub_topic" value="/v2p_delay/time"/>
+      <param name="p2v_delay_time_msg_pub_topic" value="/p2v_delay/time"/>
+      <param name="update_model_msg_pub_topic" value="/updata_model/info"/>
+      <param name="object_move_position_pub_topic" value="/physical_uav/move/position"/>
+  </node>
+
+<node name="global_virtual_guide_wrapper" pkg="global_virtual_guide" type="global_virtual_guide_wrapper" output="screen">
+      <param name="physical_object_position_sub_topic" value="/$(arg uav)/LocalPosition/Pose"/>
+      <param name="predict_window" value="8"/>                                                     <!--The window size for predicting further system state(predicted steps)-->
+      <param name="predict_time_dt" value="0.033"/>                                                  <!--The predicted time step for least square-->
+      <param name="target_position_pub_topic" value="/controller/target_position"/>
+</node>
+
+<node name="mpc_controller" pkg="global_virtual_guide" type="global_guide_controller" output="screen">
+      <param name="current_position_sub_topic" value="/phsical_uav/local/position"/>                          <!-- This topic data from sensor measure by GPS or UWB or other located system -->
+      <param name="target_position_sub_topic" value="/controller/target_position"/>                           <!-- This tipic data from state predictor-->
+      <param name="controller_output_pub_topic" value="/controller/output"/>              <!-- This topic data to px4 controller-->
+      <param name="update_model_parameter_sub_topic" value="/model_learner/model_parameter"/>
+      <param name="predict_time_dt_pub_topic" value="/controller/predict_time_dt"/>
+      <param name="reset_object_sub_topic" value="/V_UAV_2/reset_object"/>
+      <param name="system_running_control_sub_topic" value="/system_running/control"/>
+      <param name="controller_running_hz" value="30"/>                                                        <!--The mpc controller running frequency -->
+      <param name="state_dim" value="3"/>
+      <param name="observe_dim" value="3"/>
+      <param name="input_dim" value="3"/>
+      <param name="control_window" value="5"/>
+      <param name="predict_window" value="8"/>
+      <param name="max_velocity" value = "2.0"/>
+</node>
+
+<node name="state_estimator_$(arg uav)" pkg="virtual_guide_predictor" type="state_estimator_node3" output="screen">
+      <param name="dt_obj_position_sub_topic" value="/physical_uav/move/position"/>                     <!-- This topic data from digital twin object -->
+      <param name="est_move_state_pub_topic" value="/physical_uav/current_move_state"/>                    <!-- This topic data from kalman filter-->
+      <param name="kf_information_pub_topic" value="/physical_uav/state_estimator/information"/>
+      <param name="kf_run_hz" value="30"/>                                                                 <!--The kalman filter running frequency -->
+      <param name="update_measure_err_k" value="45.0"/>                                                     <!-- The gain of update measured error-->
+</node>
+<node name="model_learn_wrapper" pkg="global_virtual_guide" type="model_learn_wrapper_node" output="screen">
+      <param name="controller_output_sub_topic" value="/virtual_guide/cmd"/>
+      <param name="target_cmd_pub_topic" value="/target_cmd"/>                                                     <!--The window size for predicting further system state(predicted steps)-->
+      <param name="est_move_state_sub_topic" value="/physical_uav/current_move_state"/>                    <!-- This topic data from kalman filter-->
+      <param name="est_velocity_pub_topic" value="/physical_uav/current/velocity"/>
+</node>
+
+<node name="model_learner" pkg="global_virtual_guide" type="global_guide_model_learner_node" output="screen">
+      <param name="local_position_sub_topic" value="/phsical_uav/local/position"/>                     <!-- This topic data from digital twin object -->
+      <param name="target_velocity_sub_topic" value="/physical_uav/current/velocity"/>                    <!-- This topic data from kalman filter-->
+      <param name="update_model_parameter_pub_topic" value="/model_learner/model_parameter"/>                                                                                                        <!-- The gain of update measured error-->
+      <param name="model_learner_info_pub_topic" value="/model_learner/information"/>
+      <param name="model_learner_control_sub_topic" value="/model_learner/control"/>
+      <param name="model_learner_run_hz" value="30.0"/>
+      <param name="is_model_range" value="false"/>
+      <param name="model_err_x" value = "0.00008"/>
+      <param name="model_err_y" value = "0.00008"/>
+      <param name="model_err_z" value = "0.00008"/>
+      <param name="init_sample_time_x" value = "1.0"/>
+      <param name="init_sample_time_y" value = "1.0"/>
+      <param name="init_sample_time_z" value = "1.0"/>
+</node>
+
+</launch>

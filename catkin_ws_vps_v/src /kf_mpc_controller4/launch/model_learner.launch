@@ -1,0 +1,16 @@
+<launch>
+<node name="model_learner" pkg="kf_mpc_controller2" type="model_learner_node" output="screen">
+      <param name="local_position_sub_topic" value="/mavros/local_position/pose"/>                     <!-- This topic data from digital twin object -->
+      <param name="target_velocity_sub_topic" value="/mavros/setpoint_velocity/cmd_vel_unstamped"/>                    <!-- This topic data from kalman filter-->
+      <param name="update_model_parameter_pub_topic" value="/model_learner/model_parameter"/>                                                                                                        <!-- The gain of update measured error-->
+      <param name="model_learner_info_pub_topic" value="/model_learner/information"/>
+      <param name="model_learner_run_hz" value="30.0"/>
+      <param name="is_model_range" value="false"/>
+      <param name="model_err_x" value = "0.00008"/>
+      <param name="model_err_y" value = "0.00008"/>
+      <param name="model_err_z" value = "0.00008"/>
+      <param name="init_sample_time_x" value = "1.0"/>
+      <param name="init_sample_time_y" value = "1.0"/>
+      <param name="init_sample_time_z" value = "1.0"/>
+</node>
+</launch>

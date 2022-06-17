@@ -1,0 +1,11 @@
+<launch>
+<node name="uav_pack_center_uav" pkg="physical_message_pack" type="physical_message_pack_node" output="screen">
+      <param name="SourceID" value="1"/>
+      <param name="TargetID" value="201"/>
+      <param name="iot_pub_topic" value="/r_uav_0/msg_to_iot"/>
+      <param name="virtual_object_position_sub_topic" value="/mavros/local_position/pose"/>
+      <param name="virtual_guide_sub_topic" value="/virtual_guide/cmd"/>
+      <param name="virtual_guide_control_sub_topic" value="/virtual_guide/type"/>
+      <param name="model_learner_control_sub_topic" value="/model_learner_control"/>
+</node>
+</launch>

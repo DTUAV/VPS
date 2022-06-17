@@ -1,0 +1,3 @@
+location: GPS
+mission_1:partical guidance
+mission_2:full guidance

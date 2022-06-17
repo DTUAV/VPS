@@ -1,0 +1,6 @@
+<launch>
+<node name="kf_mpc_controller_wrapper" pkg="kf_mpc_controller_wrapper" type="kf_mpc_controller_wrapper" output="screen">
+      <param name="px4_vihecle_pose_sub_topic" value="/uav1/mavros/local_position/pose"/>                 <!--The Current pose Message From PX4-->
+      <param name="object_move_position_pub_topic" value="/virtual/uav0/current_position"/>       <!--The Object Move Position to Other Controller-->                                                              <!--The RC Channel of Land Vehicle-->
+</node>
+</launch>
